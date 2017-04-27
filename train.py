@@ -35,6 +35,7 @@ SAVE_DIR = './images/'
 SAVE_NUM_IMAGES = 2
 SAVE_PRED_EVERY = 500
 SNAPSHOT_DIR = './snapshots/'
+LOG_DIR = './logs/'
 WEIGHTS_PATH = None
 
 IMG_MEAN = np.array((104.00698793,116.66876762,122.67891434), dtype=np.float32)
@@ -68,6 +69,8 @@ def get_arguments():
                         help="Save figure with predictions and ground truth every often.")
     parser.add_argument("--snapshot_dir", type=str, default=SNAPSHOT_DIR,
                         help="Where to save snapshots of the model.")
+    parser.add_argument("--log_dir", type=str, default=LOG_DIR,
+                        help="Where to save logs.")
     parser.add_argument("--weights_path", type=str, default=WEIGHTS_PATH,
                         help="Path to the file with caffemodel weights. "
                              "If not set, all the variables are initialised randomly.")
@@ -119,10 +122,11 @@ def main():
 
     # Define the loss and optimisation parameters.
     loss = net.loss(image_batch, label_batch)
+    tf.summary.scalar('loss', loss)
+
     optimiser = tf.train.AdamOptimizer(learning_rate=args.learning_rate)
     trainable = tf.trainable_variables()
     optim = optimiser.minimize(loss, var_list=trainable)
-    
     pred = net.preds(image_batch)
     
     # Set up tf session and initialize variables. 
@@ -130,14 +134,17 @@ def main():
     config.gpu_options.allow_growth = True
     sess = tf.Session(config=config)
     init = tf.global_variables_initializer()
-    
     sess.run(init)
     
     # Saver for storing checkpoints of the model.
     saver = tf.train.Saver(var_list=trainable, max_to_keep=40)
     if args.restore_from is not None:
         load(saver, sess, args.restore_from)
-    
+
+    now_time = datetime.now()
+    train_writer = tf.summary.FileWriter(args.log_dir + str(now_time), sess.graph)
+    summary_op = tf.summary.merge_all()
+
     # Start queue threads.
     threads = tf.train.start_queue_runners(coord=coord, sess=sess)
     
@@ -147,9 +154,9 @@ def main():
     # Iterate over training steps.
     for step in range(args.num_steps):
         start_time = time.time()
-        
         if step % args.save_pred_every == 0:
-            loss_value, images, labels, preds, _ = sess.run([loss, image_batch, label_batch, pred, optim])
+            loss_value, images, labels, preds, summary, _ = sess.run([loss, image_batch, label_batch, pred, summary_op, optim])
+            train_writer.add_summary(summary, step)
             fig, axes = plt.subplots(args.save_num_images, 3, figsize = (16, 12))
             for i in xrange(args.save_num_images):
                 axes.flat[i * 3].set_title('data')

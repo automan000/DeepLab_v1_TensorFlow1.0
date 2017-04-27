@@ -1,2 +1,5 @@
 models/*
 snapshots/*
+.idea/
+*.pyc
+logs/*
