@@ -156,7 +156,7 @@ def main():
         start_time = time.time()
         if step % args.save_pred_every == 0:
             loss_value, images, labels, preds, summary, _ = sess.run([loss, image_batch, label_batch, pred, summary_op, optim])
-            train_writer.add_summary(summary, step)
+            train_writer.add_summary(summary, global_step=step)
             fig, axes = plt.subplots(args.save_num_images, 3, figsize = (16, 12))
             for i in xrange(args.save_num_images):
                 axes.flat[i * 3].set_title('data')

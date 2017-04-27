@@ -3,3 +3,4 @@ snapshots/*
 .idea/
 *.pyc
 logs/*
+[0-9]*.png
