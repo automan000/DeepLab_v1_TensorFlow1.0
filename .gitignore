@@ -4,3 +4,4 @@ snapshots/*
 *.pyc
 logs/*
 [0-9]*.png
+README_deprecated.md

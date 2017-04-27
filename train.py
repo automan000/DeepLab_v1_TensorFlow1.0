@@ -59,6 +59,8 @@ def get_arguments():
                         help="Learning rate for training.")
     parser.add_argument("--num_steps", type=int, default=NUM_STEPS,
                         help="Number of training steps.")
+    parser.add_argument("--weight_decay", type=int, default=WEIGHT_DECAY_FACTOR,
+                        help="Weights decay factor.")
     parser.add_argument("--restore_from", type=str, default=RESTORE_FROM,
                         help="Where restore model parameters from.")
     parser.add_argument("--save_dir", type=str, default=SAVE_DIR,
@@ -125,7 +127,7 @@ def main():
     # remove variables associating the to data layer
     vars.remove(vars[0])
     weights_decays = tf.reduce_sum(
-        input_tensor=WEIGHT_DECAY_FACTOR * tf.stack(
+        input_tensor=args.weight_decay * tf.stack(
             [tf.nn.l2_loss(i) for i in vars]
         ),
         name='weights_norm'
