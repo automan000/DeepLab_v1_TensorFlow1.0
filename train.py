@@ -143,9 +143,14 @@ def main():
     lr = tf.train.exponential_decay(args.learning_rate, global_step, 2000, 0.1)
     tf.summary.scalar('learning_rate', lr)
 
-    train_op1 = tf.train.AdamOptimizer(lr).minimize(loss, global_step=global_step, var_list=trainable[:-2])
+    # train_op1 = tf.train.AdamOptimizer(lr).minimize(loss, global_step=global_step, var_list=trainable[:-2])
+    # train_op2 = tf.train.AdamOptimizer(lr * 10).minimize(loss, global_step=global_step, var_list=trainable[-2:])
+
+    train_op1 = tf.train.MomentumOptimizer(lr, momentum=0.9).minimize(loss, global_step=global_step,
+                                                                      var_list=trainable[:-2])
     # the lr for the final classifier layer is 10x greater than other layers.
-    train_op2 = tf.train.AdamOptimizer(lr * 10).minimize(loss, global_step=global_step, var_list=trainable[-2:])
+    train_op2 = tf.train.MomentumOptimizer(lr * 10, momentum=0.9).minimize(loss, global_step=global_step,
+                                                                           var_list=trainable[-2:])
     optimizer = tf.group(train_op1, train_op2)
     pred = net.preds(image_batch)
     
