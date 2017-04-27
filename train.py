@@ -10,7 +10,6 @@ from __future__ import print_function
 import argparse
 from datetime import datetime
 import os
-import sys
 import time
 
 import matplotlib
@@ -27,6 +26,7 @@ DATA_DIRECTORY = '/home/automan/Data/Pascal/VOC2012'
 DATA_LIST_PATH = './dataset/train.txt'
 INPUT_SIZE = '321,321'
 LEARNING_RATE = 1e-4
+WEIGHT_DECAY_FACTOR = 0.0005
 MEAN_IMG = tf.Variable(np.array((104.00698793,116.66876762,122.67891434)), trainable=False, dtype=tf.float32)
 NUM_STEPS = 20000
 RANDOM_SCALE = True
@@ -120,10 +120,22 @@ def main():
     # Create network.
     net = DeepLabLFOVModel(args.weights_path)
 
+    # add weight decays
+    vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+    # remove variables associating the to data layer
+    vars.remove(vars[0])
+    weights_decays = tf.reduce_sum(
+        input_tensor=WEIGHT_DECAY_FACTOR * tf.stack(
+            [tf.nn.l2_loss(i) for i in vars]
+        ),
+        name='weights_norm'
+    )
+
     # Define the loss and optimisation parameters.
     loss = net.loss(image_batch, label_batch)
     tf.summary.scalar('loss', loss)
-
+    loss += weights_decays
+    tf.summary.scalar('total_loss', loss)
     optimiser = tf.train.AdamOptimizer(learning_rate=args.learning_rate)
     trainable = tf.trainable_variables()
     optim = optimiser.minimize(loss, var_list=trainable)
