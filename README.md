@@ -10,6 +10,7 @@ Works with TensorFLow>=1.0
 
 The Weight decay should functions correctly now.
 
+Tracks training with TensorBoard
 
 ## Requirements
 
@@ -31,3 +32,5 @@ You can download two already converted models (`model.ckpt-init` and `model.ckpt
 ## Todo
 
 The Post-processing step with DenseCRF
+
+Atrous spatial pyramid pooling (ASPP)
