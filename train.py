@@ -8,24 +8,27 @@ which contains approximately 10000 images for training and 1500 images for valid
 from __future__ import print_function
 
 import argparse
-from datetime import datetime
 import os
 import time
+from datetime import datetime
 
 import matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
 import numpy as np
 
-from nets import DeepLabLFOVModel, ImageReader, decode_labels
+from nets.large_fov.image_reader import ImageReader
+from nets.large_fov.model import DeepLabLFOVModel
+from nets.large_fov.utils import decode_labels
 
 BATCH_SIZE = 10
 DATA_DIRECTORY = '/home/automan/Data/Pascal/VOC2012'
 DATA_LIST_PATH = './dataset/train.txt'
 INPUT_SIZE = '321,321'
-LEARNING_RATE = 1e-4
+LEARNING_RATE = 1e-3
 WEIGHT_DECAY_FACTOR = 0.0005
 MEAN_IMG = tf.Variable(np.array((104.00698793,116.66876762,122.67891434)), trainable=False, dtype=tf.float32)
 NUM_STEPS = 20000
@@ -102,7 +105,8 @@ def load(loader, sess, ckpt_path):
 def main():
     """Create the model and start the training."""
     args = get_arguments()
-    
+    global_step = tf.Variable(0, trainable=False)
+
     h, w = map(int, args.input_size.split(','))
     input_size = (h, w)
     
@@ -121,26 +125,28 @@ def main():
     
     # Create network.
     net = DeepLabLFOVModel(args.weights_path)
-
-    # add weight decays
-    vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
-    # remove variables associating the to data layer
-    vars.remove(vars[0])
-    weights_decays = tf.reduce_sum(
-        input_tensor=args.weight_decay * tf.stack(
-            [tf.nn.l2_loss(i) for i in vars]
-        ),
-        name='weights_norm'
-    )
-
     # Define the loss and optimisation parameters.
     loss = net.loss(image_batch, label_batch)
     tf.summary.scalar('loss', loss)
-    loss += weights_decays
-    tf.summary.scalar('total_loss', loss)
-    optimiser = tf.train.AdamOptimizer(learning_rate=args.learning_rate)
+
     trainable = tf.trainable_variables()
-    optim = optimiser.minimize(loss, var_list=trainable)
+    # Weight decay
+    decays = tf.reduce_sum(
+        input_tensor=args.weight_decay * tf.stack(
+            [tf.nn.l2_loss(i) for i in trainable]
+        ),
+        name='weights_norm'
+    )
+    tf.summary.scalar('weight_decay', decays)
+    loss += decays
+    tf.summary.scalar('total_loss', loss)
+    lr = tf.train.exponential_decay(args.learning_rate, global_step, 2000, 0.1)
+    tf.summary.scalar('learning_rate', lr)
+
+    train_op1 = tf.train.AdamOptimizer(lr).minimize(loss, global_step=global_step, var_list=trainable[:-2])
+    # the lr for the final classifier layer is 10x greater than other layers.
+    train_op2 = tf.train.AdamOptimizer(lr * 10).minimize(loss, global_step=global_step, var_list=trainable[-2:])
+    optimizer = tf.group(train_op1, train_op2)
     pred = net.preds(image_batch)
     
     # Set up tf session and initialize variables. 
@@ -169,7 +175,7 @@ def main():
     for step in range(args.num_steps):
         start_time = time.time()
         if step % args.save_pred_every == 0:
-            loss_value, images, labels, preds, summary, _ = sess.run([loss, image_batch, label_batch, pred, summary_op, optim])
+            loss_value, images, labels, preds, summary, _ = sess.run([loss, image_batch, label_batch, pred, summary_op, optimizer])
             train_writer.add_summary(summary, global_step=step)
             fig, axes = plt.subplots(args.save_num_images, 3, figsize = (16, 12))
             for i in xrange(args.save_num_images):
@@ -185,7 +191,7 @@ def main():
             plt.close(fig)
             save(saver, sess, args.snapshot_dir, step)
         else:
-            loss_value, _ = sess.run([loss, optim])
+            loss_value, _ = sess.run([loss, optimizer])
         duration = time.time() - start_time
         print('step {:d} \t loss = {:.3f}, ({:.3f} sec/step)'.format(step, loss_value, duration))
     coord.request_stop()
