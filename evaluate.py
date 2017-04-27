@@ -19,7 +19,7 @@ import numpy as np
 
 from nets import DeepLabLFOVModel, ImageReader, decode_labels
 
-DATA_DIRECTORY = '/home//VOCdevkit'
+DATA_DIRECTORY = '/home/automan/Data/Pascal/VOC2012'
 DATA_LIST_PATH = './dataset/val.txt'
 NUM_STEPS = 1449
 RESTORE_FROM = None

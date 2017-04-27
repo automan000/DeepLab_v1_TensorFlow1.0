@@ -160,7 +160,8 @@ def main():
     sess = tf.Session(config=config)
     init = tf.global_variables_initializer()
     sess.run(init)
-    
+
+
     # Saver for storing checkpoints of the model.
     saver = tf.train.Saver(var_list=trainable, max_to_keep=40)
     if args.restore_from is not None:

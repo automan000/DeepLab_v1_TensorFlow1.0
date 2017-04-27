@@ -7,4 +7,5 @@ logs/*
 README_deprecated.md
 logs/
 models/
-snapshots/
+snapshots*/
+images_*
