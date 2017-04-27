@@ -31,6 +31,8 @@ You can download two already converted models (`model.ckpt-init` and `model.ckpt
 
 ## Todo
 
+Fully functional evaluation code
+
 The Post-processing step with DenseCRF
 
 Atrous spatial pyramid pooling (ASPP)
