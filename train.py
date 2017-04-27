@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
 
-from deeplab_lfov import DeepLabLFOVModel, ImageReader, decode_labels
+from nets import DeepLabLFOVModel, ImageReader, decode_labels
 
 BATCH_SIZE = 10
 DATA_DIRECTORY = '/home/automan/Data/Pascal/VOC2012'

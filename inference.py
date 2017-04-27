@@ -16,7 +16,7 @@ from PIL import Image
 import tensorflow as tf
 import numpy as np
 
-from deeplab_lfov import DeepLabLFOVModel, ImageReader, decode_labels
+from nets import DeepLabLFOVModel, ImageReader, decode_labels
 
 SAVE_DIR = './output/'
 IMG_MEAN = np.array((104.00698793,116.66876762,122.67891434), dtype=np.float32)

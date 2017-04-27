@@ -17,7 +17,7 @@ from PIL import Image
 import tensorflow as tf
 import numpy as np
 
-from deeplab_lfov import DeepLabLFOVModel, ImageReader, decode_labels
+from nets import DeepLabLFOVModel, ImageReader, decode_labels
 
 DATA_DIRECTORY = '/home//VOCdevkit'
 DATA_LIST_PATH = './dataset/val.txt'
