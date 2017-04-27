@@ -1,7 +1,10 @@
 models/*
 snapshots/*
-.idea/
+.idea
 *.pyc
 logs/*
 [0-9]*.png
 README_deprecated.md
+logs/
+models/
+snapshots/
