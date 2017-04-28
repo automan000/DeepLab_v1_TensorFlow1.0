@@ -59,7 +59,6 @@ def read_images_from_disk(input_queue, input_size, random_scale):
             label = tf.squeeze(label, axis=[0]) # resize_image_with_crop_or_pad accepts 3D-tensor.
         img = tf.image.resize_image_with_crop_or_pad(img, h, w)
         label = tf.image.resize_image_with_crop_or_pad(label, h, w)
-    # print(img.get_shape().as_list())
     # RGB -> BGR.
     img_r, img_g, img_b = tf.split(axis=2, num_or_size_splits=3, value=img)
     img = tf.cast(tf.concat(axis=2, values=[img_b, img_g, img_r]), dtype=tf.float32)
