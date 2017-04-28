@@ -10,6 +10,7 @@ from __future__ import print_function
 import argparse
 import os
 import time
+import math
 import scipy.misc
 import matplotlib
 
@@ -18,6 +19,7 @@ import matplotlib.pyplot as plt
 
 import tensorflow as tf
 import numpy as np
+import scipy.misc
 
 from nets.large_fov.image_reader_for_test import ImageReader
 from nets.large_fov.model import DeepLabLFOVModel
@@ -103,7 +105,7 @@ def main():
             input_size,
             RANDOM_SCALE,
             coord)
-        image_batch, label_batch = reader.dequeue(args.batch_size)
+        image_batch, label_batch, shape_batch = reader.dequeue(args.batch_size)
     
     # Create network.
     net = DeepLabLFOVModel(args.weights_path)
@@ -127,27 +129,24 @@ def main():
     
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)
-   
+    if not os.path.exists(args.save_dir + 'mask/'):
+        os.makedirs(args.save_dir + 'mask/')
+    if not os.path.exists(args.save_dir + 'pred/'):
+        os.makedirs(args.save_dir + 'pred/')
+
     # Iterate over training steps.
-    for step in range(reader.image_num / args.batch_size):
+    for step in range(int(math.ceil(reader.image_num / args.batch_size))):
         start_time = time.time()
-        images, labels, preds = sess.run([image_batch, label_batch, pred])
+        images, labels, shapes, preds = sess.run([image_batch, label_batch, shape_batch, pred])
         for i in range(len(preds)):
 
-            image = (images[i] + IMG_MEAN)[:, :, ::-1].astype(np.uint8)
-            prediction = decode_labels(preds[i, :, :, 0])
+            shape = shapes[i]
+            label = decode_labels(labels[i, :, :, 0])[:shape[0], :shape[1], :]
+            prediction = decode_labels(preds[i, :, :, 0])[:shape[0],:shape[1],:]
 
-            """
-            fig, axes = plt.subplots(1, 3, figsize=(16, 6))
-            axes.flat[0].set_title('data')
-            axes.flat[0].imshow((images[i] + IMG_MEAN)[:, :, ::-1].astype(np.uint8))
-            axes.flat[1].set_title('mask')
-            axes.flat[1].imshow(decode_labels(labels[i, :, :, 0]))
-            axes.flat[2].set_title('pred')
-            axes.flat[2].imshow(decode_labels(preds[i, :, :, 0]))
-            plt.savefig(args.save_dir + str(len(preds) * step + i) + ".png")
-            plt.close(fig)
-            """
+            scipy.misc.imsave(args.save_dir + 'mask/' + str(step * args.batch_size + i) +'.png', label)
+            scipy.misc.imsave(args.save_dir + 'pred/' + str(step * args.batch_size + i) +'.png', prediction)
+
 
         duration = time.time() - start_time
         print('step {:d} \t ({:.3f} sec/step)'.format(step, duration))
