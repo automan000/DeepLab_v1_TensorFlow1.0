@@ -4,8 +4,8 @@ snapshots/*
 *.pyc
 logs/*
 [0-9]*.png
-README_deprecated.md
 logs/
 models/
 snapshots*/
 images_*
+*_deprecated.*
