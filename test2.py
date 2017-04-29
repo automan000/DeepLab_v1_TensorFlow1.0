@@ -145,9 +145,12 @@ def main():
             # vlabel = decode_labels(labels[i, :, :, 0])[:shape[0], :shape[1], :]
             # vprediction = decode_labels(preds[i, :, :, 0])[:shape[0],:shape[1],:]
 
-            scipy.misc.imsave(args.save_dir + 'mask/' + str(step * args.batch_size + i) +'.png', label)
-            scipy.misc.imsave(args.save_dir + 'pred/' + str(step * args.batch_size + i) +'.png', prediction)
+            # test =  np.expand_dims(label, axis=2)
 
+            scipy.misc.imsave(args.save_dir + 'mask/' + str(step * args.batch_size + i) + '.png',
+                              np.squeeze(label, axis=2))
+            scipy.misc.imsave(args.save_dir + 'pred/' + str(step * args.batch_size + i) + '.png',
+                              np.squeeze(prediction, axis=2))
 
         duration = time.time() - start_time
         print('step {:d} \t ({:.3f} sec/step)'.format(step, duration))
