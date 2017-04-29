@@ -139,10 +139,11 @@ def main():
         start_time = time.time()
         images, labels, shapes, preds = sess.run([image_batch, label_batch, shape_batch, pred])
         for i in range(len(preds)):
-
             shape = shapes[i]
-            label = decode_labels(labels[i, :, :, 0])[:shape[0], :shape[1], :]
-            prediction = decode_labels(preds[i, :, :, 0])[:shape[0],:shape[1],:]
+            label = (labels[i])[:shape[0], :shape[1], :]
+            prediction = (preds[i])[:shape[0], :shape[1], :]
+            # vlabel = decode_labels(labels[i, :, :, 0])[:shape[0], :shape[1], :]
+            # vprediction = decode_labels(preds[i, :, :, 0])[:shape[0],:shape[1],:]
 
             scipy.misc.imsave(args.save_dir + 'mask/' + str(step * args.batch_size + i) +'.png', label)
             scipy.misc.imsave(args.save_dir + 'pred/' + str(step * args.batch_size + i) +'.png', prediction)
