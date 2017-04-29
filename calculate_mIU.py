@@ -1,39 +1,84 @@
+#!/usr/bin/env python3
+# -*- coding: UTF-8 -*-
+
+import cv2
 import numpy as np
-from scipy import ndimage
+import glob
+import argparse
+import os
+from tqdm import tqdm
 
-DATA_LIST='./images_val/'
-
-
-def computeIU(y_pred_batch, y_true_batch):
-    return np.mean(np.asarray([pixelAccuracy(y_pred_batch[i], y_true_batch[i]) for i in range(len(y_true_batch))]))
-
-
-def pixelAccuracy(y_pred, y_true):
-    # img_rows, img_cols = y_true.shape
-    # y_pred = np.argmax(np.reshape(y_pred,[N_CLASSES_PASCAL,img_rows,img_cols]),axis=0)
-    # y_true = np.argmax(np.reshape(y_true,[N_CLASSES_PASCAL,img_rows,img_cols]),axis=0)
-    y_pred = y_pred * (y_true > 0)
-    return 1.0 * np.sum((y_pred==y_true)*(y_true>0)) / np.sum(y_true > 0)
+VOC_CLASSES = [
+    'background'  ,
+    'aeroplane'   ,
+    'bicycle'     ,
+    'bird'        ,
+    'boat'        ,
+    'bottle'      ,
+    'bus'         ,
+    'car'         ,
+    'cat'         ,
+    'chair'       ,
+    'cow'         ,
+    'diningtable' ,
+    'dog'         ,
+    'horse'       ,
+    'motorbike'   ,
+    'person'      ,
+    'pottedplant' ,
+    'sheep'       ,
+    'sofa'        ,
+    'train'       ,
+    'tvmonitor'   ,
+]
 
 
 def main():
-    groundtruth = []
-    predictions = []
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--pred', default='./images_val/pred/', help='path to predictions')
+    parser.add_argument('--gt', default='./images_val/mask/', help='path to groundtruths')
 
-    import glob
+    parser.add_argument('--classes', type=int, default=21, help='number of classes')
+    parser.add_argument('--ignore', type=int, default=255, help='number of classes')
+    args = parser.parse_args()
 
-    gt_filename = glob.glob(DATA_LIST+'mask/*.png')
-    pd_filename = glob.glob(DATA_LIST+'pred/*.png')
+    gtlist = glob.glob(os.path.join(args.gt, '*.png'))
+    predlist = glob.glob(os.path.join(args.pred, '*.png'))
+    imgs = {}
+    for imgpath in predlist:
+        fn = os.path.basename(imgpath)
+        imgs[fn] = imgpath
 
-    for filename in gt_filename:
-        corresponding_pred = DATA_LIST + 'pred/' + filename[filename.rfind('/') + 1:]
-        if corresponding_pred in pd_filename:
-            im = ndimage.imread(filename)
-            groundtruth.append(im)
-            im = ndimage.imread(corresponding_pred)
-            predictions.append(im)
+    t_pos_sum = [0] * args.classes
+    f_pos_sum = [0] * args.classes
+    f_neg_sum = [0] * args.classes
+    for imgpath in tqdm(gtlist):
+        gt = cv2.imread(imgpath)
+        fn = os.path.basename(imgpath)
+        if fn in imgs:
+            pred = cv2.imread(imgs[fn])
+        else:
+            pred = np.ones_like(gt, dtype=np.uint8) * args.classes
 
-    print(computeIU(predictions, groundtruth))
+        for i in range(args.classes):
+            gt_i = gt == i
+            pred_i = pred == i
+            gt_ni = np.logical_not(gt_i)
+            pred_ni = np.logical_not(pred_i)
+            t_pos = np.logical_and(gt_i, pred_i).sum()
+            f_pos = np.logical_and(np.logical_and(gt_ni, gt != args.ignore), pred_i).sum()
+            f_neg = np.logical_and(gt_i, pred_ni).sum()
+            t_pos_sum[i] += t_pos
+            f_pos_sum[i] += f_pos
+            f_neg_sum[i] += f_neg
+
+    accs = []
+    for i in range(args.classes):
+        acc = 100. * t_pos_sum[i] / (t_pos_sum[i] + f_pos_sum[i] + f_neg_sum[i])
+        accs.append(acc)
+        print('{}: {}'.format(VOC_CLASSES[i], acc))
+
+    print('mAP:', sum(accs) / args.classes)
 
 
 if __name__ == '__main__':

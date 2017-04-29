@@ -1,11 +1,11 @@
 models/*
-snapshots/*
 .idea
 *.pyc
 logs/*
 [0-9]*.png
 logs/
 models/
-snapshots*/
+snapshots1/
 images_*
 *_deprecated.*
+deprecated
