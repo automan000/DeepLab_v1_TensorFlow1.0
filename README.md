@@ -4,13 +4,21 @@ This is an implementation of [DeepLab-LargeFOV](http://ccvl.stat.ucla.edu/deepla
 
 This code is based on the implementation from [tensorflow-deeplab-lfov](https://github.com/DrSleep/tensorflow-deeplab-lfov). Please check this repository for details.
 
-## Differences
+## TODO
 
-Works with TensorFLow>=1.0
+- [x]Works with TensorFLow>=1.0
 
-The Weight decay should functions correctly now.
+- [x]Weight decay
 
-Tracks training with TensorBoard
+- [x]Tracks training with TensorBoard
+
+- [x] Fully functional evaluation code
+
+- [x] Achieve the performance reported in [ArXiv](https://arxiv.org/abs/1606.00915)
+
+The Post-processing step with DenseCRF
+
+Atrous spatial pyramid pooling (ASPP)
 
 ## Requirements
 
@@ -29,10 +37,3 @@ pip install -user -r requirements.txt
 
 You can download two already converted models (`model.ckpt-init` and `model.ckpt-pretrained`) [here](https://drive.google.com/open?id=0B_rootXHuswsTF90M1NWQmFYelU).
 
-## Todo
-
-Fully functional evaluation code
-
-The Post-processing step with DenseCRF
-
-Atrous spatial pyramid pooling (ASPP)
