@@ -6,14 +6,10 @@ This code is based on the implementation from [tensorflow-deeplab-lfov](https://
 
 ## TODO
 
-- [x]Works with TensorFLow>=1.0
-
+- [x] Works with TensorFLow>=1.0
 - [x]Weight decay
-
 - [x]Tracks training with TensorBoard
-
 - [x] Fully functional evaluation code
-
 - [x] Achieve the performance reported in [ArXiv](https://arxiv.org/abs/1606.00915)
 
 The Post-processing step with DenseCRF
