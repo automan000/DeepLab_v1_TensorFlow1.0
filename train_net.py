@@ -124,7 +124,7 @@ def main():
             input_size,
             RANDOM_SCALE,
             coord)
-        image_batch, label_batch = reader.dequeue(args.batch_size)
+        image_batch, label_batch, _ = reader.dequeue(args.batch_size)
     
     # Create network.
     net = DeepLabLFOVModel(args.weights_path)

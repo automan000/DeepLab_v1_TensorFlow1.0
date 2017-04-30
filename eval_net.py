@@ -21,7 +21,7 @@ import tensorflow as tf
 import numpy as np
 import scipy.misc
 
-from nets.large_fov.image_reader_for_test import ImageReader
+from nets.large_fov.image_reader import ImageReader
 from nets.large_fov.model import DeepLabLFOVModel
 from nets.large_fov.utils import decode_labels
 
@@ -32,8 +32,8 @@ INPUT_SIZE = '321,321'
 
 MEAN_IMG = tf.Variable(np.array((104.00698793,116.66876762,122.67891434)), trainable=False, dtype=tf.float32)
 RANDOM_SCALE = False
-RESTORE_FROM = './snapshots1/checkpoint'
-SAVE_DIR = './images_val/'
+RESTORE_FROM = 'snapshots/'
+SAVE_DIR = 'images_val/'
 WEIGHTS_PATH = None
 
 IMG_MEAN = np.array((104.00698793,116.66876762,122.67891434), dtype=np.float32)
@@ -55,12 +55,12 @@ def get_arguments():
     parser.add_argument("--input_size", type=str, default=INPUT_SIZE,
                         help="Comma-separated string with height and width of images.")
     parser.add_argument("--restore_from", type=str, default=RESTORE_FROM,
-                        help="Where restore model parameters from.")
-    parser.add_argument("--save_dir", type=str, default=SAVE_DIR,
-                        help="Where to save figures with predictions.")
+                        help="Where restore checkpoint from.")
     parser.add_argument("--weights_path", type=str, default=WEIGHTS_PATH,
                         help="Path to the file with caffemodel weights. "
                             "If not set, all the variables are initialised randomly.")
+    parser.add_argument("--save_dir", type=str, required=True,
+                        help="Where to save figures with predictions.")
     return parser.parse_args()
 
 
@@ -90,10 +90,10 @@ def load(loader, sess, ckpt_path):
 def main():
     """Create the model and start the training."""
     args = get_arguments()
-
+    """
     h, w = map(int, args.input_size.split(','))
     input_size = None  # (h, w)
-    
+    """
     # Create queue coordinator.
     coord = tf.train.Coordinator()
     
@@ -102,7 +102,7 @@ def main():
         reader = ImageReader(
             args.data_dir,
             args.data_list,
-            input_size,
+            None,
             RANDOM_SCALE,
             coord)
         image_batch, label_batch, shape_batch = reader.dequeue(args.batch_size)
@@ -121,7 +121,7 @@ def main():
 
     saver = tf.train.Saver(var_list=tf.trainable_variables())
 
-    ckpt = tf.train.get_checkpoint_state('./snapshots1/')
+    ckpt = tf.train.get_checkpoint_state(args.restore_from)
     load(saver, sess, ckpt.model_checkpoint_path)
 
     # Start queue threads.
@@ -144,8 +144,6 @@ def main():
             prediction = (preds[i])[:shape[0], :shape[1], :]
             # vlabel = decode_labels(labels[i, :, :, 0])[:shape[0], :shape[1], :]
             # vprediction = decode_labels(preds[i, :, :, 0])[:shape[0],:shape[1],:]
-
-            # test =  np.expand_dims(label, axis=2)
 
             scipy.misc.imsave(args.save_dir + 'mask/' + str(step * args.batch_size + i) + '.png',
                               np.squeeze(label, axis=2))

@@ -16,7 +16,7 @@ from PIL import Image
 import tensorflow as tf
 import numpy as np
 
-from nets.large_fov.image_reader import ImageReader
+from nets.large_fov.image_reader_deprecated import ImageReader
 from nets.large_fov.model import DeepLabLFOVModel
 from nets.large_fov.utils import decode_labels
 

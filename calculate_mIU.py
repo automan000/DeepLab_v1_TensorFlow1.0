@@ -35,8 +35,8 @@ VOC_CLASSES = [
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--pred', default='./images_val/pred/', help='path to predictions')
-    parser.add_argument('--gt', default='./images_val/mask/', help='path to groundtruths')
+    parser.add_argument('--pred', required=True, help='path to predictions')
+    parser.add_argument('--gt', required=True, help='path to groundtruths')
 
     parser.add_argument('--classes', type=int, default=21, help='number of classes')
     parser.add_argument('--ignore', type=int, default=255, help='number of classes')

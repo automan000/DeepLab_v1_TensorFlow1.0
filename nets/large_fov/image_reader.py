@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import tensorflow as tf
+from scipy import ndimage
 
 IMG_MEAN = np.array((104.00698793,116.66876762,122.67891434), dtype=np.float32)
 
@@ -18,11 +19,14 @@ def read_labeled_image_list(data_dir, data_list):
     f = open(data_list, 'r')
     images = []
     masks = []
+    shape = []
+
     for line in f:
         image, mask = line.strip("\n").split(' ')
         images.append(data_dir + image)
+        shape.append(ndimage.imread(data_dir + image).shape[:2])
         masks.append(data_dir + mask)
-    return images, masks
+    return images, masks, shape
 
 def read_images_from_disk(input_queue, input_size, random_scale): 
     """Read one image and its corresponding mask with optional pre-processing.
@@ -39,7 +43,8 @@ def read_images_from_disk(input_queue, input_size, random_scale):
     """
     img_contents = tf.read_file(input_queue[0])
     label_contents = tf.read_file(input_queue[1])
-    
+    shape = input_queue[2]
+
     img = tf.image.decode_jpeg(img_contents, channels=3)
     label = tf.image.decode_png(label_contents, channels=1)
     if input_size is not None:
@@ -58,8 +63,9 @@ def read_images_from_disk(input_queue, input_size, random_scale):
     img_r, img_g, img_b = tf.split(axis=2, num_or_size_splits=3, value=img)
     img = tf.cast(tf.concat(axis=2, values=[img_b, img_g, img_r]), dtype=tf.float32)
     # Extract mean.
-    img -= IMG_MEAN 
-    return img, label
+    img -= IMG_MEAN
+
+    return img, label, shape
 
 class ImageReader(object):
     '''Generic ImageReader which reads images and corresponding segmentation
@@ -80,13 +86,16 @@ class ImageReader(object):
         self.data_list = data_list
         self.input_size = input_size
         self.coord = coord
+        self.val_index = 0
 
-        self.image_list, self.label_list = read_labeled_image_list(self.data_dir, self.data_list)
+        self.image_list, self.label_list, self.shape_list = read_labeled_image_list(self.data_dir, self.data_list)
         self.images = tf.convert_to_tensor(self.image_list, dtype=tf.string)
         self.labels = tf.convert_to_tensor(self.label_list, dtype=tf.string)
-        self.queue = tf.train.slice_input_producer([self.images, self.labels],
+        self.shapes = tf.convert_to_tensor(self.shape_list)
+
+        self.queue = tf.train.slice_input_producer([self.images, self.labels, self.shapes],
                                                    shuffle=input_size is not None) # Not shuffling if it is val.
-        self.image, self.label = read_images_from_disk(self.queue, self.input_size, random_scale)
+        self.image, self.label, self.shape = read_images_from_disk(self.queue, self.input_size, random_scale)
 
         self.image_num = len(self.image_list)
 
@@ -98,7 +107,7 @@ class ImageReader(object):
           
         Returns:
           Two tensors of size (batch_size, h, w, {3,1}) for images and masks.'''
-        image_batch, label_batch = tf.train.batch([self.image, self.label],
-                                                  num_elements)
+        image_batch, label_batch, shape_batch = tf.train.batch([self.image, self.label, self.shape],
+                                                  num_elements, dynamic_pad=True)
 
-        return image_batch, label_batch
+        return image_batch, label_batch, shape_batch
