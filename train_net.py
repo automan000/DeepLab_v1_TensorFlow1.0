@@ -66,7 +66,7 @@ def get_arguments():
                         help="Learning rate decays every n steps.")
     parser.add_argument("--num_steps", type=int, default=NUM_STEPS,
                         help="Number of training steps.")
-    parser.add_argument("--weight_decay", type=int, default=WEIGHT_DECAY_FACTOR,
+    parser.add_argument("--weight_decay", type=float, default=WEIGHT_DECAY_FACTOR,
                         help="Weights decay factor.")
     parser.add_argument("--momentum", type=float, default=MOMENTUM,
                         help="momentum.")
