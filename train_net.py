@@ -31,6 +31,7 @@ INPUT_SIZE = '321,321'
 LEARNING_RATE = 1e-3
 WEIGHT_DECAY_FACTOR = 0.0005
 LR_DECAY_EVERY = 6000
+MOMENTUM = 0.9
 MEAN_IMG = tf.Variable(np.array((104.00698793,116.66876762,122.67891434)), trainable=False, dtype=tf.float32)
 NUM_STEPS = 30000
 RANDOM_SCALE = True
@@ -67,6 +68,8 @@ def get_arguments():
                         help="Number of training steps.")
     parser.add_argument("--weight_decay", type=int, default=WEIGHT_DECAY_FACTOR,
                         help="Weights decay factor.")
+    parser.add_argument("--momentum", type=float, default=MOMENTUM,
+                        help="momentum.")
     parser.add_argument("--restore_from", type=str, default=RESTORE_FROM,
                         help="Where restore model parameters from.")
     parser.add_argument("--save_dir", type=str, default=SAVE_DIR,
@@ -149,10 +152,10 @@ def main():
     # train_op1 = tf.train.AdamOptimizer(lr).minimize(loss, global_step=global_step, var_list=trainable[:-2])
     # train_op2 = tf.train.AdamOptimizer(lr * 10).minimize(loss, global_step=global_step, var_list=trainable[-2:])
 
-    train_op1 = tf.train.MomentumOptimizer(lr, momentum=0.9).minimize(loss, global_step=global_step,
+    train_op1 = tf.train.MomentumOptimizer(lr, momentum=args.momentum).minimize(loss, global_step=global_step,
                                                                       var_list=trainable[:-2])
     # the lr for the final classifier layer is 10x greater than other layers.
-    train_op2 = tf.train.MomentumOptimizer(lr * 10, momentum=0.9).minimize(loss, global_step=global_step,
+    train_op2 = tf.train.MomentumOptimizer(lr * 10, momentum=args.momentum).minimize(loss, global_step=global_step,
                                                                            var_list=trainable[-2:])
     optimizer = tf.group(train_op1, train_op2)
     pred = net.preds(image_batch)

@@ -4,6 +4,7 @@ models/*
 logs/*
 [0-9]*.png
 logs/
+*.log
 models/
 snapshots*/
 images_*
