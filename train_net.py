@@ -9,6 +9,7 @@ from __future__ import print_function
 
 import argparse
 import os
+import sys
 import time
 from datetime import datetime
 
@@ -28,12 +29,13 @@ BATCH_SIZE = 10
 DATA_DIRECTORY = '/home/automan/Data/Pascal/VOC2012'
 DATA_LIST_PATH = './dataset/train.txt'
 INPUT_SIZE = '321,321'
+OPTIMIZER = 'SGD'
 LEARNING_RATE = 1e-3
 WEIGHT_DECAY_FACTOR = 0.0005
-LR_DECAY_EVERY = 6000
+LR_DECAY_EVERY = 5000
 MOMENTUM = 0.9
 MEAN_IMG = tf.Variable(np.array((104.00698793,116.66876762,122.67891434)), trainable=False, dtype=tf.float32)
-NUM_STEPS = 30000
+NUM_STEPS = 20000
 RANDOM_SCALE = True
 RESTORE_FROM = './models/model.ckpt-init'
 SAVE_DIR = './images/'
@@ -60,6 +62,8 @@ def get_arguments():
                         help="Path to the file listing the images in the dataset.")
     parser.add_argument("--input_size", type=str, default=INPUT_SIZE,
                         help="Comma-separated string with height and width of images.")
+    parser.add_argument("--optimizer", type=str, default=OPTIMIZER,
+                        help="Optimizer (SGD or Adam).")
     parser.add_argument("--learning_rate", type=float, default=LEARNING_RATE,
                         help="Learning rate for training.")
     parser.add_argument("--lr_decay_step", type=int, default=LR_DECAY_EVERY,
@@ -146,18 +150,26 @@ def main():
     tf.summary.scalar('weight_decay', decays)
     loss += decays
     tf.summary.scalar('total_loss', loss)
-    lr = tf.train.exponential_decay(args.learning_rate, global_step, args.lr_decay_step, 0.1)
-    tf.summary.scalar('learning_rate', lr)
 
-    # train_op1 = tf.train.AdamOptimizer(lr).minimize(loss, global_step=global_step, var_list=trainable[:-2])
-    # train_op2 = tf.train.AdamOptimizer(lr * 10).minimize(loss, global_step=global_step, var_list=trainable[-2:])
+    if args.optimizer == 'SGD':
+        print('Apply SGD optimizer')
+        lr = tf.train.exponential_decay(args.learning_rate, global_step, args.lr_decay_step, 0.1)
+        tf.summary.scalar('learning_rate', lr)
+        # train_op1 = tf.train.AdamOptimizer(lr).minimize(loss, global_step=global_step, var_list=trainable[:-2])
+        # train_op2 = tf.train.AdamOptimizer(lr * 10).minimize(loss, global_step=global_step, var_list=trainable[-2:])
+        train_op1 = tf.train.MomentumOptimizer(lr, momentum=args.momentum).minimize(loss, global_step=global_step,
+                                                                          var_list=trainable[:-2])
+        # the lr for the final classifier layer is 10x greater than other layers.
+        train_op2 = tf.train.MomentumOptimizer(lr * 10, momentum=args.momentum).minimize(loss, global_step=global_step,
+                                                                               var_list=trainable[-2:])
+        optimizer = tf.group(train_op1, train_op2)
+    elif args.optimizer == 'Adam':
+        print('Apply Adam optimizer')
+        optimizer = tf.train.AdamOptimizer(learning_rate=args.learning_rate)
+    else:
+        sys.exit("Unknown optimizer.")
 
-    train_op1 = tf.train.MomentumOptimizer(lr, momentum=args.momentum).minimize(loss, global_step=global_step,
-                                                                      var_list=trainable[:-2])
-    # the lr for the final classifier layer is 10x greater than other layers.
-    train_op2 = tf.train.MomentumOptimizer(lr * 10, momentum=args.momentum).minimize(loss, global_step=global_step,
-                                                                           var_list=trainable[-2:])
-    optimizer = tf.group(train_op1, train_op2)
+    tf.summary.scalar('learning_rate', optimizer._lt_t)
     pred = net.preds(image_batch)
     
     # Set up tf session and initialize variables. 
