@@ -75,13 +75,19 @@ train: 71.4086065257
 
 tvmonitor: 53.9655908926
 
-
+## parameters
 Optimizer: SGD
+
 Batch Size: 10
+
 Learning rate: 1e-3
+
 Lr_decay_step: 5000
+
 Total_step: 20000
+
 Momentum: 0.9
+
 Weight decay: 0.0005
 
 ## Caffe model
