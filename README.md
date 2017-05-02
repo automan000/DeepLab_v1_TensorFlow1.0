@@ -30,6 +30,9 @@ pip install -user -r requirements.txt
 ```
 
 ## Best results at present
+
+mAP: 59.22999966028858 (62.25 reported in [ArXiv](https://arxiv.org/abs/1606.00915))
+
 background: 88.5654446653
 aeroplane: 66.6891497821
 bicycle: 27.5425855685
@@ -51,7 +54,7 @@ sheep: 65.3341241448
 sofa: 37.3502489281
 train: 71.4086065257
 tvmonitor: 53.9655908926
-('mAP:', 59.22999966028858)
+
 
 Optimizer: SGD
 Batch Size: 10
