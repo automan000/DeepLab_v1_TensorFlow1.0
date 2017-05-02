@@ -34,25 +34,45 @@ pip install -user -r requirements.txt
 mAP: 59.22999966028858 (62.25 reported in [ArXiv](https://arxiv.org/abs/1606.00915))
 
 background: 88.5654446653
+
 aeroplane: 66.6891497821
+
 bicycle: 27.5425855685
+
 bird: 71.9108573055
+
 boat: 51.4274847257
+
 bottle: 62.3651852486
+
 bus: 78.4051023721
+
 car: 70.6123718826
+
 cat: 75.3887068995
+
 chair: 25.7829156204
+
 cow: 53.5545469656
+
 diningtable: 48.3028937323
+
 dog: 69.360881792
+
 horse: 52.9500919802
+
 motorbike: 64.8494736002
+
 person: 72.9275538607
+
 pottedplant: 35.1361763734
+
 sheep: 65.3341241448
+
 sofa: 37.3502489281
+
 train: 71.4086065257
+
 tvmonitor: 53.9655908926
 
 
