@@ -163,13 +163,16 @@ def main():
         train_op2 = tf.train.MomentumOptimizer(lr * 10, momentum=args.momentum).minimize(loss, global_step=global_step,
                                                                                var_list=trainable[-2:])
         optimizer = tf.group(train_op1, train_op2)
+        tf.summary.scalar('learning_rate', lr)
     elif args.optimizer == 'Adam':
         print('Apply Adam optimizer')
-        optimizer = tf.train.AdamOptimizer(learning_rate=args.learning_rate)
+        optimizer = tf.train.AdamOptimizer(learning_rate=args.learning_rate).minimize(loss, global_step=global_step,
+                                                                          var_list=trainable[:-2])
+        # tf.summary.scalar('learning_rate', optimizer._lr_t)
     else:
         sys.exit("Unknown optimizer.")
 
-    tf.summary.scalar('learning_rate', optimizer._lt_t)
+
     pred = net.preds(image_batch)
     
     # Set up tf session and initialize variables. 
