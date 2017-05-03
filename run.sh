@@ -10,8 +10,8 @@ LOG_FILE=snapshots/test.log
 # mkdir snapshots
 # python2 ./train_net.py $OPTIMIZER --snapshot_dir=$SNAPSHOT_DIR --restore_from=$CHECKPOINT_DIR 
 python2 ./eval_net.py --save_dir=$PREDICTION_DIR --restore_from=$SNAPSHOT_DIR
-python2 ./calculate_mIU.py --pred="${PREDICTION_DIR}pred/" --gt="${PREDICTION_DIR}mask/" | tee $LOG_FILE
-echo $OPTIMIZER >> $LOG_FILE
+# python2 ./calculate_mIU.py --pred="${PREDICTION_DIR}pred/" --gt="${PREDICTION_DIR}mask/" | tee $LOG_FILE
+# echo $OPTIMIZER >> $LOG_FILE
 # mv snapshots snapshots2
 
 # round 2
